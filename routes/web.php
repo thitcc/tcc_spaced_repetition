@@ -1,6 +1,10 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\CourseController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\SubjectController;
+use App\Http\Controllers\FlashcardController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -19,20 +23,39 @@ use Inertia\Inertia;
 Route::get('/', function () {
     return Inertia::render('Welcome', [
         'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
+        'canRegister' => Route::has('registro'),
         'laravelVersion' => Application::VERSION,
         'phpVersion' => PHP_VERSION,
     ]);
 });
 
-Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+// Route::group(['middleware' => ['role:admin']], function () {
+//     // Rotas que somente o admin pode acessar
+// });
+
+// Route::group(['middleware' => ['role:teacher']], function () {
+//     // Rotas que somente professores podem acessar
+// });
+
+// Route::group(['middleware' => ['role:student']], function () {
+//     // Rotas que somente alunos podem acessar
+// });
+
+Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
+
+Route::middleware(['auth', 'role:teacher'])->group(function () {
+    Route::post('/courses', [CourseController::class, 'store'])->name('courses.store');
+    Route::post('/courses/{course}/addStudent', [CourseController::class, 'addStudent'])->name('courses.addStudent');
+    Route::get('/courses/{course}', [CourseController::class, 'show'])->name('courses.show');
+    Route::post('/subjects', [SubjectController::class, 'store'])->name('subjects.store');
+    Route::get('/subjects/{subject}', [SubjectController::class, 'show'])->name('subjects.show');
+    Route::post('/flashcards', [FlashcardController::class, 'store'])->name('flashcards.store');
 });
 
 require __DIR__.'/auth.php';
