@@ -59,7 +59,7 @@ function createCourse() {
     
     <Head title="Dashboard" />
     
-    <AuthenticatedLayout>
+    <AuthenticatedLayout :user="props.user">
         <div v-if="showToast" class="toast" :class="{ 'show': showToast }">{{ toastMessage }}</div>
 
         <template #header>

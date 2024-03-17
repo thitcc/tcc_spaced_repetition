@@ -11,6 +11,7 @@ class SubjectController extends Controller
     public function show(Subject $subject)
     {
         return Inertia::render('SubjectShow', [
+            'user' => auth()->user(),
             'subject' => $subject->load('flashcards'),
             'userRole' => auth()->user()->getRoleNames()->first(),
         ]);

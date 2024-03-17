@@ -13,6 +13,7 @@ class DashboardController extends Controller
         $courses = $user->courses()->with('teacher')->get();
 
         return Inertia::render('Dashboard', [
+            'user' => auth()->user(),
             'courses' => $courses,
             'userRole' => auth()->user()->getRoleNames()->first(),
         ]);

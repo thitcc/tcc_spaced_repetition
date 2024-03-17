@@ -30,7 +30,7 @@ function createSubject() {
 </script>
 
 <template>
-    <AuthenticatedLayout>
+    <AuthenticatedLayout :user="props.user">
         <Head title="Detalhes do Curso" />
 
         <div class="py-12">

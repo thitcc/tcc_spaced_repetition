@@ -66,7 +66,7 @@ function getButtonClass(option, answer) {
 </script>
 
 <template>
-    <AuthenticatedLayout>
+    <AuthenticatedLayout :user="props.user">
         <Head title="Detalhes do Tópico" />
 
         <div class="py-12">

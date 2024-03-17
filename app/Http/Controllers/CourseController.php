@@ -13,6 +13,7 @@ class CourseController extends Controller
     public function show(Course $course)
     {
         return Inertia::render('CourseShow', [
+            'user' => auth()->user(),
             'course' => $course->load('teacher', 'subjects'),
             'userRole' => auth()->user()->getRoleNames()->first(),
         ]);
