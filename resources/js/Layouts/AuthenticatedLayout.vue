@@ -1,12 +1,149 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
 import NavLink from '@/Components/NavLink.vue';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
+import axios from 'axios';
+import { defineProps } from 'vue';
 
+const props = defineProps({
+  user: Object,
+});
 const showingNavigationDropdown = ref(false);
+
+const notifications = ref([]);
+const unreadNotifications = ref([]);
+const dropdownOpen = ref(false);
+const modalOpen = ref(false);
+const modalMessage = ref("");
+
+const toggleDropdown = () => {
+    dropdownOpen.value = !dropdownOpen.value;
+};
+
+const toggleModal = () => {
+    modalOpen.value = !modalOpen.value;
+};
+
+const fetchNotifications = async () => {
+    try {
+        const response = await axios.get('/notifications');
+        notifications.value = response.data;
+        unreadNotifications.value = notifications.value.filter(notification => !notification.read_at);
+    } catch (error) {
+        console.error('Ocorreu um erro ao buscar as notificações.', error);
+    }
+};
+
+const markAsRead = async (notificationId) => {
+    try {
+        await axios.post(`/notifications/${notificationId}/markAsRead`);
+        fetchNotifications();
+    } catch (error) {
+        console.error('Ocorreu um erro ao marcar a notificação como lida.', error);
+    }
+};
+
+const openDailyReviewModal = () => {
+    modalMessage.value = "Você tem 5 minutinhos para fazer a revisão do dia?";
+    modalOpen.value = true;
+};
+
+const showModalBasedOnLastLogin = () => {
+    const lastLoginAt = props.user.last_login_at ? new Date(props.user.last_login_at) : null;
+    const now = new Date();
+
+    if (lastLoginAt && lastLoginAt.toDateString() !== now.toDateString()) {
+        openDailyReviewModal();
+    }
+};
+
+onMounted(() => {
+    fetchNotifications();
+    showModalBasedOnLastLogin();
+});
 </script>
+
+<style>
+.bell-icon-container {
+    position: relative;
+    margin-left: auto
+}
+
+.notification-dropdown {
+    position: absolute;
+    right: 0;
+    top: 100%;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    width: 300px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+}
+
+.notification-item {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+}
+
+.notification-item div:last-child {
+    margin-top: 5px;
+    font-size: 0.8em;
+}
+
+.notification-item:hover {
+    background-color: #f6f6f6;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  width: auto;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+.btn-blue {
+  background-color: #3490dc;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  margin-right: 10px;
+  cursor: pointer;
+}
+
+.btn-grey {
+  background-color: #b8c2cc;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+</style>
 
 <template>
     <div>
@@ -22,6 +159,32 @@ const showingNavigationDropdown = ref(false);
                                     Início
                                 </NavLink>
                             </div>
+                        </div>
+
+                          <!-- Modal -->
+                        <div v-if="modalOpen" class="modal-overlay">
+                            <div class="modal">
+                                <p>{{ modalMessage }}</p>
+                                <div class="modal-actions">
+                                    <button class="btn-blue" @click="toggleModal">Sim</button>
+                                    <button class="btn-grey" @click="toggleModal">Ignorar</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bell-icon-container mr-2 flex items-center">
+                            <button @click="toggleDropdown">
+                                <font-awesome-icon icon="bell" />
+                                <span v-if="unreadNotifications.length">({{ unreadNotifications.length }})</span>
+                            </button>
+                            <div v-if="dropdownOpen" class="notification-dropdown">
+                                <div v-for="notification in notifications" :key="notification.id" class="notification-item" @click="markAsRead(notification.id)">
+                                    <div>{{ notification.content }}</div>
+                                    <div class="text-sm text-gray-500">
+                                        {{ new Date(notification.created_at).toLocaleDateString() }}
+                                    </div>
+                                </div>
+                            </div>                        
                         </div>
 
                         <div class="hidden sm:flex sm:items-center sm:ms-6">
