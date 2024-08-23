@@ -3,19 +3,25 @@
 namespace App\Http\Controllers;
 
 use Inertia\Inertia;
+use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $user = auth()->user();
-
-        $courses = $user->courses()->with('teacher')->get();
-
+        $sortBy = $request->query('sortBy', 'created_at');
+        $sortDirection = $request->query('sortDirection', 'desc');
+    
+        $courses = $user->courses()
+                        ->with('teacher')
+                        ->orderBy($sortBy, $sortDirection)
+                        ->get();
+    
         return Inertia::render('Dashboard', [
-            'user' => auth()->user(),
+            'user' => $user,
             'courses' => $courses,
-            'userRole' => auth()->user()->getRoleNames()->first(),
+            'userRole' => $user->getRoleNames()->first(),
         ]);
     }
 }
