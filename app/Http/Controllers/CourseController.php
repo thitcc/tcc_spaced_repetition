@@ -33,7 +33,7 @@ class CourseController extends Controller
     {
         $course = Course::findOrFail($courseId);
     
-        $studentEmails = $request->input('student_emails'); // TODO: trocar por ID
+        $studentEmails = $request->input('student_emails');
         $emailsArray = explode(',', $studentEmails);
     
         $students = User::whereIn('email', $emailsArray)->get();

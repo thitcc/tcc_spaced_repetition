@@ -50,14 +50,14 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::get('/notifications', [NotificationController::class, 'index']);
     Route::post('/notifications/{notification}/markAsRead', [NotificationController::class, 'markAsRead']);
+    Route::get('/courses/{course}', [CourseController::class, 'show'])->name('courses.show');
+    Route::get('/subjects/{subject}', [SubjectController::class, 'show'])->name('subjects.show');
 });
 
 Route::middleware(['auth', 'role:teacher'])->group(function () {
     Route::post('/courses', [CourseController::class, 'store'])->name('courses.store');
     Route::post('/courses/{course}/addStudent', [CourseController::class, 'addStudent'])->name('courses.addStudent');
-    Route::get('/courses/{course}', [CourseController::class, 'show'])->name('courses.show');
     Route::post('/subjects', [SubjectController::class, 'store'])->name('subjects.store');
-    Route::get('/subjects/{subject}', [SubjectController::class, 'show'])->name('subjects.show');
     Route::post('/flashcards', [FlashcardController::class, 'store'])->name('flashcards.store');
 });
 

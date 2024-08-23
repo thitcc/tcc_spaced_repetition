@@ -12,12 +12,24 @@ class DashboardController extends Controller
         $user = auth()->user();
         $sortBy = $request->query('sortBy', 'created_at');
         $sortDirection = $request->query('sortDirection', 'desc');
-    
-        $courses = $user->courses()
-                        ->with('teacher')
-                        ->orderBy($sortBy, $sortDirection)
-                        ->get();
-    
+        $courses = collect();
+
+        if ($user->hasRole('student')) {
+            $courses = $user->studentCourses()
+                            ->with('teacher')
+                            ->orderBy($sortBy, $sortDirection)
+                            ->get();
+        } else if ($user->hasRole('teacher')) {
+            $courses = $user->courses()
+                                    ->with('teacher')
+                                    ->orderBy($sortBy, $sortDirection)
+                                    ->get();
+        }
+
+        $courses = $courses->sortBy([
+            [$sortBy, $sortDirection]
+        ]);
+        
         return Inertia::render('Dashboard', [
             'user' => $user,
             'courses' => $courses,
