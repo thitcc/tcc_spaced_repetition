@@ -35,6 +35,10 @@ COPY . .
 # Install PHP dependencies
 RUN composer install --optimize-autoloader --no-dev
 
+# Use entrypoint script
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
 # Install Node.js dependencies and build assets
 RUN npm install
 RUN npm run build
@@ -44,4 +48,4 @@ RUN chown -R www-data:www-data storage bootstrap/cache
 
 # Expose port 8000 and start Laravel server
 EXPOSE 8000
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
+ENTRYPOINT ["/entrypoint.sh"]
