@@ -40,7 +40,7 @@ COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 # Install Node.js dependencies and build assets
-RUN npm install
+RUN npm ci
 RUN npm run build
 
 # Set permissions for storage and cache
