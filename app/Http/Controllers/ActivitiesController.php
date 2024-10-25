@@ -25,9 +25,11 @@ class ActivitiesController extends Controller
         $subjects = $subjects->map(function ($subject) {
             $now = Carbon::now();
 
-            if ($subject->next_review_at) {
+            if ($subject->completed) {
+                $subject->priority = 0;
+            } elseif ($subject->next_review_at) {
                 $diffInHours = $now->diffInHours($subject->next_review_at, false);
-
+        
                 if ($diffInHours <= 0) {
                     $subject->priority = 10;
                 } else {
