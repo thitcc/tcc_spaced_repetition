@@ -1,9 +1,11 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import { Head, useForm, usePage } from "@inertiajs/vue3";
+import axios from "axios";
 
 const { props } = usePage();
+const isDueForReview = props.isDueForReview;
 const showFlashcardModal = ref(false);
 const userResponses = ref({});
 const flashcardForm = useForm({
@@ -49,21 +51,79 @@ function closeFlashcardModal() {
 
 const selectedAnswer = ref("");
 
-function selectAnswer(option) {
+async function selectAnswer(option) {
+  if (selectedAnswer.value) {
+    return;
+  }
   selectedAnswer.value = option;
+
+  try {
+    const response = await axios.post(
+      `/api/flashcards/${activeFlashcard.value.id}/respond`,
+      {
+        selected_answer: option,
+      }
+    );
+    const isCorrect = response.data.is_correct;
+
+    userResponses.value[activeFlashcard.value.id] = {
+      selected_answer: option,
+      is_correct: isCorrect,
+    };
+  } catch (error) {
+    console.error("Error submitting answer:", error);
+  }
 }
 
 function getButtonClass(option, answer) {
   let baseClasses = "bg-gray-100 rounded-lg p-4 text-gray-700 font-bold";
-  if (selectedAnswer.value) {
+  const response = userResponses.value[activeFlashcard.value.id];
+  if (response) {
     if (option === answer) {
       return `${baseClasses} bg-green-500 text-white`;
-    } else if (option === selectedAnswer.value) {
+    } else if (option === response.selected_answer) {
       return `${baseClasses} bg-red-500 text-white`;
     }
   }
   return baseClasses;
 }
+
+async function resetResponses() {
+  try {
+    await axios.post(`/api/subjects/${props.subject.id}/reset-responses`);
+    userResponses.value = {};
+    alert("Respostas resetadas para uma nova revisão.");
+  } catch (error) {
+    console.error("Error resetting responses:", error);
+  }
+}
+
+const allAnswered = computed(() => {
+  return props.subject.flashcards.every(
+    (flashcard) => userResponses.value[flashcard.id]
+  );
+});
+
+const quality = ref(5);
+
+async function submitReview() {
+  try {
+    await axios.post(`/api/subjects/${props.subject.id}/review`, {
+      quality: quality.value,
+    });
+    alert("Avaliação enviada com sucesso!");
+  } catch (error) {
+    console.error("Error submitting review:", error);
+  }
+}
+
+onMounted(() => {
+  props.subject.flashcards.forEach((flashcard) => {
+    if (flashcard.user_response) {
+      userResponses.value[flashcard.id] = flashcard.user_response;
+    }
+  });
+});
 </script>
 
 <template>
@@ -74,10 +134,16 @@ function getButtonClass(option, answer) {
       <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
         <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
           <div class="flex items-center justify-between p-6 text-gray-900">
-            <div class="flex-1 min-w-0">
+            <div class="flex-1 min-w-0 flex items-center justify-between">
               <h2 class="text-2xl font-semibold truncate">
                 {{ props.subject.name }}
               </h2>
+              <button
+                @click="resetResponses"
+                class="py-2 px-4 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none"
+              >
+                Reiniciar Revisão
+              </button>
             </div>
             <div class="ml-4 flex-shrink-0 flex">
               <button
@@ -100,6 +166,15 @@ function getButtonClass(option, answer) {
                 @click="openFlashcardModal(flashcard)"
               >
                 {{ flashcard.question }}
+              </div>
+              <div class="flex justify-end p-4">
+                <button
+                  v-if="isDueForReview"
+                  @click="resetResponses"
+                  class="py-2 px-4 bg-yellow-500 text-white font-semibold rounded-lg shadow-md hover:bg-yellow-700 focus:outline-none"
+                >
+                  Reiniciar Revisão
+                </button>
               </div>
             </div>
           </div>
@@ -212,6 +287,29 @@ function getButtonClass(option, answer) {
             </button>
           </div>
         </form>
+      </div>
+    </div>
+
+    <div
+      v-if="allAnswered"
+      class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50"
+    >
+      <div class="bg-white p-8 rounded-lg shadow-lg w-1/3">
+        <h3 class="font-semibold text-xl mb-4">Revisão Completa</h3>
+        <p>Avalie seu desempenho geral (0-5):</p>
+        <input
+          type="number"
+          v-model="quality"
+          min="0"
+          max="5"
+          class="mt-2 mb-4 w-full border rounded-md p-2"
+        />
+        <button
+          @click="submitReview"
+          class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+        >
+          Enviar Avaliação
+        </button>
       </div>
     </div>
   </AuthenticatedLayout>
