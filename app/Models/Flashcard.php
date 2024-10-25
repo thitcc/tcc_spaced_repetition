@@ -33,4 +33,14 @@ class Flashcard extends Model
     {
         return $this->correct_answer === $option;
     }
+
+    public function responses()
+    {
+        return $this->hasMany(FlashcardResponse::class);
+    }
+
+    public function userResponse()
+    {
+        return $this->hasOne(FlashcardResponse::class)->where('user_id', auth()->id());
+    }
 }
