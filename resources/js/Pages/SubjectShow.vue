@@ -2,11 +2,11 @@
 import { ref, computed, onMounted } from "vue";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import { Head, useForm, usePage } from "@inertiajs/vue3";
-import axios from "axios";
 
 const { props } = usePage();
 const isDueForReview = props.isDueForReview;
 const showFlashcardModal = ref(false);
+const showReviewModal = ref(false);
 const userResponses = ref({});
 const flashcardForm = useForm({
   question: "",
@@ -92,6 +92,7 @@ async function resetResponses() {
   try {
     await axios.post(`/api/subjects/${props.subject.id}/reset-responses`);
     userResponses.value = {};
+    showReviewModal.value = false;
     alert("Respostas resetadas para uma nova revisão.");
   } catch (error) {
     console.error("Error resetting responses:", error);
@@ -99,22 +100,29 @@ async function resetResponses() {
 }
 
 const allAnswered = computed(() => {
-  return props.subject.flashcards.every(
+  let response = props.subject.flashcards.every(
     (flashcard) => userResponses.value[flashcard.id]
   );
+  if (response && !showReviewModal.value) {
+    showReviewModal.value = true;
+  }
 });
 
 const quality = ref(5);
 
-async function submitReview() {
-  try {
-    await axios.post(`/api/subjects/${props.subject.id}/review`, {
+function submitReview() {
+  axios
+    .post(`/api/subjects/${props.subject.id}/review`, {
       quality: quality.value,
+    })
+    .then(() => {
+      props.subject.completed = true;
+      showReviewModal.value = false;
+      window.location.reload();
+    })
+    .catch((error) => {
+      console.error("Error submitting review:", error);
     });
-    alert("Avaliação enviada com sucesso!");
-  } catch (error) {
-    console.error("Error submitting review:", error);
-  }
 }
 
 onMounted(() => {
@@ -166,15 +174,6 @@ onMounted(() => {
                 @click="openFlashcardModal(flashcard)"
               >
                 {{ flashcard.question }}
-              </div>
-              <div class="flex justify-end p-4">
-                <button
-                  v-if="isDueForReview"
-                  @click="resetResponses"
-                  class="py-2 px-4 bg-yellow-500 text-white font-semibold rounded-lg shadow-md hover:bg-yellow-700 focus:outline-none"
-                >
-                  Reiniciar Revisão
-                </button>
               </div>
             </div>
           </div>
@@ -291,7 +290,7 @@ onMounted(() => {
     </div>
 
     <div
-      v-if="allAnswered"
+      v-if="showReviewModal && allAnswered"
       class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50"
     >
       <div class="bg-white p-8 rounded-lg shadow-lg w-1/3">

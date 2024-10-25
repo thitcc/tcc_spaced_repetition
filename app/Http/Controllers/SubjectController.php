@@ -43,11 +43,19 @@ class SubjectController extends Controller
         $request->validate([
             'quality' => 'required|integer|min:0|max:5',
         ]);
-
+    
         $quality = $request->input('quality');
-
+    
         $subject->updatePriority($quality);
-
+    
+        if ($quality >= 4) {
+            $subject->completed = true;
+        } else {
+            $subject->completed = false;
+        }
+    
+        $subject->save();
+    
         return response()->json(['success' => true]);
     }
 }
