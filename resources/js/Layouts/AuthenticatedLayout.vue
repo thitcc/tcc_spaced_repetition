@@ -58,8 +58,6 @@ const showModalBasedOnLastLogin = () => {
     : null;
   const now = new Date();
 
-  console.log("notifications:", props.user.notifications);
-
   if (lastLoginAt && lastLoginAt.toDateString() !== now.toDateString()) {
     // openDailyReviewModal();
   }
@@ -70,85 +68,6 @@ onMounted(() => {
   showModalBasedOnLastLogin();
 });
 </script>
-
-<style>
-.bell-icon-container {
-  position: relative;
-  margin-left: auto;
-}
-
-.notification-dropdown {
-  position: absolute;
-  right: 0;
-  top: 100%;
-  background: white;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  width: 300px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  z-index: 1000;
-}
-
-.notification-item {
-  padding: 10px;
-  border-bottom: 1px solid #eee;
-  cursor: pointer;
-}
-
-.notification-item div:last-child {
-  margin-top: 5px;
-  font-size: 0.8em;
-}
-
-.notification-item:hover {
-  background-color: #f6f6f6;
-}
-
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.modal {
-  background: white;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  width: auto;
-}
-
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 20px;
-}
-
-.btn-blue {
-  background-color: #3490dc;
-  color: white;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 4px;
-  margin-right: 10px;
-  cursor: pointer;
-}
-
-.btn-grey {
-  background-color: #b8c2cc;
-  color: white;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-</style>
 
 <template>
   <div>
@@ -165,6 +84,13 @@ onMounted(() => {
                   :active="route().current('dashboard')"
                 >
                   Cursos
+                </NavLink>
+                <NavLink
+                  v-if="props.user.roles[0].name === 'student'"
+                  :href="route('activities')"
+                  :active="route().current('activities')"
+                >
+                  Atividades
                 </NavLink>
               </div>
             </div>
@@ -341,3 +267,82 @@ onMounted(() => {
     </div>
   </div>
 </template>
+
+<style>
+.bell-icon-container {
+  position: relative;
+  margin-left: auto;
+}
+
+.notification-dropdown {
+  position: absolute;
+  right: 0;
+  top: 100%;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  width: 300px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+}
+
+.notification-item {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+  cursor: pointer;
+}
+
+.notification-item div:last-child {
+  margin-top: 5px;
+  font-size: 0.8em;
+}
+
+.notification-item:hover {
+  background-color: #f6f6f6;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  width: auto;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+.btn-blue {
+  background-color: #3490dc;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  margin-right: 10px;
+  cursor: pointer;
+}
+
+.btn-grey {
+  background-color: #b8c2cc;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+</style>
