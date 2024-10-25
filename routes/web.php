@@ -3,6 +3,7 @@
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ActivitiesController;
 use App\Http\Controllers\SubjectController;
 use App\Http\Controllers\FlashcardController;
 use Illuminate\Foundation\Application;
@@ -43,6 +44,8 @@ Route::get('/', function () {
 // });
 
 Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/activities', [ActivitiesController::class, 'index'])->middleware(['auth', 'verified'])->name('activities');
+
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
