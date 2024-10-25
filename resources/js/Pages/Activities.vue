@@ -1,13 +1,8 @@
 <script setup>
-import { onMounted } from "vue";
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import { Head, usePage } from "@inertiajs/vue3";
 
 const { props } = usePage();
-
-onMounted(() => {
-  console.log("activities", props.activities);
-});
 </script>
 
 <template>
@@ -43,7 +38,8 @@ onMounted(() => {
                         {{ new Date(subject.next_review_at).toLocaleString() }}
                       </p>
                     </div>
-                    <div>
+
+                    <div v-if="!subject.completed">
                       <span
                         v-if="subject.priority >= 8"
                         class="font-semibold text-red-500"
@@ -61,6 +57,13 @@ onMounted(() => {
                         class="font-semibold text-green-500"
                       >
                         Prioridade Baixa
+                      </span>
+                    </div>
+                    <div v-else>
+                      <span
+                        class="ml-2 inline-block bg-green-200 text-green-800 text-xs px-2 py-1 rounded-full"
+                      >
+                        Respondido
                       </span>
                     </div>
                   </div>
