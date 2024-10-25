@@ -114,17 +114,21 @@ onMounted(() => {
                 >
               </button>
               <div v-if="dropdownOpen" class="notification-dropdown">
-                <div
-                  v-for="notification in notifications"
-                  :key="notification.id"
-                  class="notification-item"
-                  @click="markAsRead(notification.id)"
-                >
-                  <div>{{ notification.content }}</div>
-                  <div class="text-sm text-gray-500">
-                    {{ new Date(notification.created_at).toLocaleDateString() }}
+                <a href="/activities">
+                  <div
+                    v-for="notification in notifications"
+                    :key="notification.id"
+                    class="notification-item"
+                    @click="markAsRead(notification.id)"
+                  >
+                    <div>{{ notification.content }}</div>
+                    <div class="text-sm text-gray-500">
+                      {{
+                        new Date(notification.created_at).toLocaleDateString()
+                      }}
+                    </div>
                   </div>
-                </div>
+                </a>
               </div>
             </div>
 
