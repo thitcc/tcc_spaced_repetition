@@ -8,6 +8,11 @@ import { ZiggyVue } from '../../vendor/tightenco/ziggy/dist/vue.m';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { faBell } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+import axios from 'axios';
+
+axios.defaults.withCredentials = true;
+
+axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 
 library.add(faBell);
 
