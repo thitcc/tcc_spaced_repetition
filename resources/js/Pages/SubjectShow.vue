@@ -23,6 +23,7 @@ function createFlashcard() {
     onSuccess: () => {
       showFlashcardModal.value = false;
       flashcardForm.reset();
+      window.location.reload();
     },
   });
 }
@@ -41,7 +42,10 @@ const options = computed(() => {
   return [];
 });
 
-function openFlashcardModal(flashcard) {
+function openFlashcardModal(flashcard, userRole) {
+  if (userRole === "teacher") {
+    return;
+  }
   activeFlashcard.value = flashcard;
 }
 
@@ -125,6 +129,36 @@ function submitReview() {
     });
 }
 
+const showEditFlashcardModal = ref(false);
+const editFlashcardForm = useForm({
+  question: "",
+  option_a: "",
+  option_b: "",
+  option_c: "",
+  option_d: "",
+  correct_answer: "",
+});
+
+function editFlashcard(flashcard) {
+  editFlashcardForm.question = flashcard.question;
+  editFlashcardForm.option_a = flashcard.option_a;
+  editFlashcardForm.option_b = flashcard.option_b;
+  editFlashcardForm.option_c = flashcard.option_c;
+  editFlashcardForm.option_d = flashcard.option_d;
+  editFlashcardForm.correct_answer = flashcard.correct_answer;
+  activeFlashcard.value = flashcard;
+  showEditFlashcardModal.value = true;
+}
+
+function updateFlashcard() {
+  editFlashcardForm.put(route("flashcards.update", activeFlashcard.value.id), {
+    onSuccess: () => {
+      showEditFlashcardModal.value = false;
+      window.location.reload();
+    },
+  });
+}
+
 onMounted(() => {
   props.subject.flashcards.forEach((flashcard) => {
     if (flashcard.user_response) {
@@ -147,6 +181,7 @@ onMounted(() => {
                 {{ props.subject.name }}
               </h2>
               <button
+                v-if="props.userRole !== 'teacher'"
                 @click="resetResponses"
                 class="py-2 px-4 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none"
               >
@@ -170,10 +205,21 @@ onMounted(() => {
               <div
                 v-for="flashcard in props.subject.flashcards"
                 :key="flashcard.id"
-                class="bg-gray-200 rounded-lg p-4 flex justify-center items-center h-32 cursor-pointer"
-                @click="openFlashcardModal(flashcard)"
+                class="bg-gray-200 rounded-lg p-4 relative h-32"
               >
-                {{ flashcard.question }}
+                <div
+                  class="cursor-pointer w-full h-full flex items-center justify-center"
+                  @click="openFlashcardModal(flashcard, props.userRole)"
+                >
+                  {{ flashcard.question }}
+                </div>
+                <button
+                  v-if="props.userRole === 'teacher'"
+                  @click.stop="editFlashcard(flashcard)"
+                  class="absolute bottom-2 left-1/2 transform -translate-x-1/2 text-sm bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-1 rounded"
+                >
+                  Editar
+                </button>
               </div>
             </div>
           </div>
@@ -182,7 +228,7 @@ onMounted(() => {
     </div>
 
     <div
-      v-if="activeFlashcard"
+      v-if="activeFlashcard && props.userRole !== 'teacher'"
       @click="closeFlashcardModal"
       class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50"
     >
@@ -309,6 +355,78 @@ onMounted(() => {
         >
           Enviar Avaliação
         </button>
+      </div>
+    </div>
+
+    <div
+      v-if="showEditFlashcardModal"
+      class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50"
+    >
+      <div class="bg-white p-8 rounded-lg shadow-lg w-1/3">
+        <h3 class="font-semibold text-xl mb-4">Editar Flashcard</h3>
+        <form @submit.prevent="updateFlashcard">
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700"
+              >Questão</label
+            >
+            <input
+              type="text"
+              v-model="editFlashcardForm.question"
+              required
+              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+            />
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div
+              v-for="option in ['a', 'b', 'c', 'd']"
+              :key="option"
+              class="mb-4"
+            >
+              <label class="block text-sm font-medium text-gray-700">
+                Alternativa {{ option.toUpperCase() }}
+              </label>
+              <input
+                v-model="editFlashcardForm[`option_${option}`]"
+                required
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+              />
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700">
+              Resposta Correta
+            </label>
+            <select
+              v-model="editFlashcardForm.correct_answer"
+              required
+              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+            >
+              <option value="">Selecione a resposta correta</option>
+              <option value="a">A</option>
+              <option value="b">B</option>
+              <option value="c">C</option>
+              <option value="d">D</option>
+            </select>
+          </div>
+
+          <div class="flex items-center justify-end">
+            <button
+              type="button"
+              @click="showEditFlashcardModal = false"
+              class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mr-2"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+            >
+              Atualizar
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   </AuthenticatedLayout>

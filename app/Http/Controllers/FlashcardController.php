@@ -23,4 +23,20 @@ class FlashcardController extends Controller
 
         return redirect()->back()->with('success', 'Flashcard adicionado com sucesso!');
     }
+
+    public function update(Request $request, Flashcard $flashcard)
+    {
+        $validatedData = $request->validate([
+            'question' => 'required|string|max:255',
+            'option_a' => 'required|string|max:255',
+            'option_b' => 'required|string|max:255',
+            'option_c' => 'required|string|max:255',
+            'option_d' => 'required|string|max:255',
+            'correct_answer' => 'required|in:a,b,c,d',
+        ]);
+    
+        $flashcard->update($validatedData);
+    
+        return redirect()->back()->with('success', 'Flashcard atualizado com sucesso!');
+    }
 }

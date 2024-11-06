@@ -62,6 +62,7 @@ Route::middleware(['auth', 'role:teacher'])->group(function () {
     Route::post('/courses/{course}/addStudent', [CourseController::class, 'addStudent'])->name('courses.addStudent');
     Route::post('/subjects', [SubjectController::class, 'store'])->name('subjects.store');
     Route::post('/flashcards', [FlashcardController::class, 'store'])->name('flashcards.store');
+    Route::put('/flashcards/{flashcard}', [FlashcardController::class, 'update'])->name('flashcards.update');
 });
 
 require __DIR__.'/auth.php';

@@ -20,7 +20,7 @@ class DailyNotificationMiddleware
             if (!$user->last_login_at || Carbon::parse($user->last_login_at)->toDateString() != $now->toDateString()) {
                 Notification::create([
                     'user_id' => $user->id,
-                    'content' => "Você tem 5 minutinhos para fazer a revisão do dia?",
+                    'content' => "Você tem atividades pendentes, clique aqui para visualizar!",
                     'read_at' => null,
                 ]);
 
