@@ -51,15 +51,15 @@ function openFlashcardModal(flashcard, userRole) {
 
 function closeFlashcardModal() {
   activeFlashcard.value = null;
+  selectedAnswer.value = "";
 }
 
 const selectedAnswer = ref("");
 
 async function selectAnswer(option) {
-  if (selectedAnswer.value) {
+  if (userResponses.value[activeFlashcard.value.id]) {
     return;
   }
-  selectedAnswer.value = option;
 
   try {
     const response = await axios.post(
@@ -74,30 +74,44 @@ async function selectAnswer(option) {
       selected_answer: option,
       is_correct: isCorrect,
     };
+
+    activeFlashcard.value = { ...activeFlashcard.value };
   } catch (error) {
     console.error("Error submitting answer:", error);
   }
 }
 
-function getButtonClass(option, answer) {
-  let baseClasses = "bg-gray-100 rounded-lg p-4 text-gray-700 font-bold";
-  const response = userResponses.value[activeFlashcard.value.id];
+const getButtonClass = (letter, correctAnswer) => {
+  const baseClasses = "p-4 rounded-lg text-left transition-colors";
+
+  const existingResponse = activeFlashcard.value
+    ? getUserResponse(activeFlashcard.value)
+    : null;
+
+  const newResponse = activeFlashcard.value
+    ? userResponses.value[activeFlashcard.value.id]
+    : null;
+
+  const response = existingResponse || newResponse;
+
   if (response) {
-    if (option === answer) {
+    if (letter === correctAnswer) {
       return `${baseClasses} bg-green-500 text-white`;
-    } else if (option === response.selected_answer) {
+    }
+    if (letter === response.selected_answer && letter !== correctAnswer) {
       return `${baseClasses} bg-red-500 text-white`;
     }
   }
-  return baseClasses;
-}
+
+  return `${baseClasses} bg-gray-100 hover:bg-gray-200`;
+};
 
 async function resetResponses() {
   try {
     await axios.post(`/api/subjects/${props.subject.id}/reset-responses`);
     userResponses.value = {};
     showReviewModal.value = false;
-    alert("Respostas resetadas para uma nova revisão.");
+    window.location.reload();
   } catch (error) {
     console.error("Error resetting responses:", error);
   }
@@ -159,7 +173,20 @@ function updateFlashcard() {
   });
 }
 
+const isFlashcardAnswered = (flashcard) => {
+  return flashcard.responses?.some(
+    (response) => response.user_id === props.user.id
+  );
+};
+
+const getUserResponse = (flashcard) => {
+  return flashcard.responses?.find(
+    (response) => response.user_id === props.user.id
+  );
+};
+
 onMounted(() => {
+  console.log("flashcards", props.subject.flashcards);
   props.subject.flashcards.forEach((flashcard) => {
     if (flashcard.user_response) {
       userResponses.value[flashcard.id] = flashcard.user_response;
@@ -205,7 +232,10 @@ onMounted(() => {
               <div
                 v-for="flashcard in props.subject.flashcards"
                 :key="flashcard.id"
-                class="bg-gray-200 rounded-lg p-4 relative h-32"
+                :class="[
+                  'rounded-lg p-4 relative h-32',
+                  flashcard.answered ? 'bg-green-100' : 'bg-gray-200',
+                ]"
               >
                 <div
                   class="cursor-pointer w-full h-full flex items-center justify-center"
@@ -247,6 +277,7 @@ onMounted(() => {
               getButtonClass(option.letter, activeFlashcard.correct_answer)
             "
             @click="selectAnswer(option.letter)"
+            :disabled="isFlashcardAnswered(activeFlashcard)"
           >
             {{ option.text }}
           </button>

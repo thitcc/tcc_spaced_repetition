@@ -11,9 +11,13 @@ class SubjectController extends Controller
 {
     public function show(Subject $subject)
     {
-        $subject->load(['flashcards' => function ($query) {
-            $query->with(['userResponse']);
+        $subject->load(['flashcards.responses' => function($query) {
+            $query->where('user_id', auth()->id());
         }]);
+    
+        $subject->flashcards->each(function ($flashcard) {
+            $flashcard->answered = count($flashcard->responses) > 0;
+        });
     
         $isDueForReview = $subject->next_review_at && Carbon::now()->gte($subject->next_review_at);
     
