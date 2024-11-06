@@ -54,6 +54,7 @@ function closeFlashcardModal() {
   selectedAnswer.value = "";
 }
 
+const answeredFlashcards = ref(new Set());
 const selectedAnswer = ref("");
 
 async function selectAnswer(option) {
@@ -75,11 +76,22 @@ async function selectAnswer(option) {
       is_correct: isCorrect,
     };
 
+    // Mark flashcard as answered
+    answeredFlashcards.value.add(activeFlashcard.value.id);
     activeFlashcard.value = { ...activeFlashcard.value };
   } catch (error) {
     console.error("Error submitting answer:", error);
   }
 }
+
+const getFlashcardClass = (flashcard) => {
+  return [
+    "rounded-lg p-4 relative h-32",
+    flashcard.answered || answeredFlashcards.value.has(flashcard.id)
+      ? "bg-blue-100"
+      : "bg-gray-200",
+  ];
+};
 
 const getButtonClass = (letter, correctAnswer) => {
   const baseClasses = "p-4 rounded-lg text-left transition-colors";
@@ -186,10 +198,10 @@ const getUserResponse = (flashcard) => {
 };
 
 onMounted(() => {
-  console.log("flashcards", props.subject.flashcards);
   props.subject.flashcards.forEach((flashcard) => {
     if (flashcard.user_response) {
       userResponses.value[flashcard.id] = flashcard.user_response;
+      answeredFlashcards.value.add(flashcard.id);
     }
   });
 });
@@ -232,10 +244,7 @@ onMounted(() => {
               <div
                 v-for="flashcard in props.subject.flashcards"
                 :key="flashcard.id"
-                :class="[
-                  'rounded-lg p-4 relative h-32',
-                  flashcard.answered ? 'bg-green-100' : 'bg-gray-200',
-                ]"
+                :class="getFlashcardClass(flashcard)"
               >
                 <div
                   class="cursor-pointer w-full h-full flex items-center justify-center"
