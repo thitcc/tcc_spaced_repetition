@@ -86,7 +86,7 @@ onMounted(() => {
                   Cursos
                 </NavLink>
                 <NavLink
-                  v-if="props.user.roles[0].name === 'student'"
+                  v-if="$page.props.auth.user.roles[0].name === 'student'"
                   :href="route('activities')"
                   :active="route().current('activities')"
                 >
