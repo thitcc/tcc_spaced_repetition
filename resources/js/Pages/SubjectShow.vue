@@ -94,7 +94,7 @@ const getFlashcardClass = (flashcard) => {
 };
 
 const getButtonClass = (letter, correctAnswer) => {
-  const baseClasses = "p-4 rounded-lg text-left transition-colors";
+  const baseClasses = "p-4 rounded-lg transition-colors text-center w-full"; // Added text-center and w-full
 
   const existingResponse = activeFlashcard.value
     ? getUserResponse(activeFlashcard.value)
@@ -197,6 +197,36 @@ const getUserResponse = (flashcard) => {
   );
 };
 
+function parseQuestionWithCode(text) {
+  const parts = [];
+  const regex = /```([\s\S]*?)```/g;
+  let lastIndex = 0;
+  let match;
+
+  while ((match = regex.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push({
+        text: text.substring(lastIndex, match.index),
+        isCode: false,
+      });
+    }
+    parts.push({
+      text: match[1],
+      isCode: true,
+    });
+    lastIndex = match.index + match[0].length;
+  }
+
+  if (lastIndex < text.length) {
+    parts.push({
+      text: text.substring(lastIndex),
+      isCode: false,
+    });
+  }
+
+  return parts;
+}
+
 onMounted(() => {
   props.subject.flashcards.forEach((flashcard) => {
     if (flashcard.user_response) {
@@ -250,7 +280,11 @@ onMounted(() => {
                   class="cursor-pointer w-full h-full flex items-center justify-center"
                   @click="openFlashcardModal(flashcard, props.userRole)"
                 >
-                  {{ flashcard.question }}
+                  {{
+                    flashcard.question.length > 10
+                      ? flashcard.question.substring(0, 10) + "..."
+                      : flashcard.question
+                  }}
                 </div>
                 <button
                   v-if="props.userRole === 'teacher'"
@@ -275,8 +309,16 @@ onMounted(() => {
         @click.stop
         class="relative bg-white p-8 rounded-lg shadow-lg w-1/2 mx-auto"
       >
-        <h3 class="font-semibold text-xl mb-4 text-center">
-          {{ activeFlashcard.question }}
+        <h3 class="font-semibold text-xl mb-4 text-left">
+          <template
+            v-for="(part, index) in parseQuestionWithCode(
+              activeFlashcard.question
+            )"
+            :key="index"
+          >
+            <pre v-if="part.isCode" class="code-block">{{ part.text }}</pre>
+            <span v-else class="whitespace-pre-wrap">{{ part.text }}</span>
+          </template>
         </h3>
         <div class="grid grid-cols-1 gap-4 mt-8">
           <button
@@ -287,6 +329,7 @@ onMounted(() => {
             "
             @click="selectAnswer(option.letter)"
             :disabled="isFlashcardAnswered(activeFlashcard)"
+            class="flex items-center justify-center text-center"
           >
             {{ option.text }}
           </button>
@@ -471,3 +514,15 @@ onMounted(() => {
     </div>
   </AuthenticatedLayout>
 </template>
+
+<style>
+.code-block {
+  background-color: #f4f4f4;
+  padding: 1rem;
+  border-radius: 0.375rem;
+  font-family: ui-monospace, monospace;
+  white-space: pre-wrap;
+  margin: 0.5rem 0;
+  border: 1px solid #e2e8f0;
+}
+</style>
