@@ -17,6 +17,7 @@ const flashcardForm = useForm({
   correct_answer: "",
   subject_id: props.subject.id,
 });
+const reviewSubmitted = ref(false);
 
 function createFlashcard() {
   flashcardForm.post(route("flashcards.store"), {
@@ -76,9 +77,23 @@ async function selectAnswer(option) {
       is_correct: isCorrect,
     };
 
-    // Mark flashcard as answered
     answeredFlashcards.value.add(activeFlashcard.value.id);
     activeFlashcard.value = { ...activeFlashcard.value };
+
+    const totalAnswered = Object.keys(userResponses.value).length;
+    const totalFlashcards = props.subject.flashcards.length;
+
+    if (totalAnswered === totalFlashcards) {
+      const reviewKey = `subject_${props.subject.id}_review_submitted`;
+      const hasSubmittedReview = localStorage.getItem(reviewKey) === "true";
+
+      if (!hasSubmittedReview) {
+        setTimeout(() => {
+          showReviewModal.value = true;
+          window.location.reload();
+        }, 500);
+      }
+    }
   } catch (error) {
     console.error("Error submitting answer:", error);
   }
@@ -94,7 +109,7 @@ const getFlashcardClass = (flashcard) => {
 };
 
 const getButtonClass = (letter, correctAnswer) => {
-  const baseClasses = "p-4 rounded-lg transition-colors text-center w-full"; // Added text-center and w-full
+  const baseClasses = "p-4 rounded-lg transition-colors text-center w-full";
 
   const existingResponse = activeFlashcard.value
     ? getUserResponse(activeFlashcard.value)
@@ -123,6 +138,8 @@ async function resetResponses() {
     await axios.post(`/api/subjects/${props.subject.id}/reset-responses`);
     userResponses.value = {};
     showReviewModal.value = false;
+    reviewSubmitted.value = false;
+    localStorage.removeItem(`subject_${props.subject.id}_review_submitted`);
     window.location.reload();
   } catch (error) {
     console.error("Error resetting responses:", error);
@@ -130,12 +147,27 @@ async function resetResponses() {
 }
 
 const allAnswered = computed(() => {
-  let response = props.subject.flashcards.every(
-    (flashcard) => userResponses.value[flashcard.id]
-  );
-  if (response && !showReviewModal.value) {
+  const flashcards = props.subject.flashcards;
+
+  if (!flashcards || flashcards.length === 0) {
+    return false;
+  }
+
+  const answeredCount = flashcards.filter((flashcard) =>
+    flashcard.responses?.some((response) => response.user_id === props.user.id)
+  ).length;
+
+  const allCardsAnswered = answeredCount === flashcards.length;
+
+  const reviewKey = `subject_${props.subject.id}_review_submitted`;
+  const hasSubmittedReview =
+    localStorage.getItem(reviewKey) === "true" || reviewSubmitted.value;
+
+  if (allCardsAnswered && !showReviewModal.value && !hasSubmittedReview) {
     showReviewModal.value = true;
   }
+
+  return allCardsAnswered;
 });
 
 const quality = ref(5);
@@ -148,7 +180,11 @@ function submitReview() {
     .then(() => {
       props.subject.completed = true;
       showReviewModal.value = false;
-      window.location.reload();
+      reviewSubmitted.value = true;
+      localStorage.setItem(
+        `subject_${props.subject.id}_review_submitted`,
+        "true"
+      );
     })
     .catch((error) => {
       console.error("Error submitting review:", error);
@@ -228,9 +264,16 @@ function parseQuestionWithCode(text) {
 }
 
 onMounted(() => {
+  allAnswered.value;
   props.subject.flashcards.forEach((flashcard) => {
-    if (flashcard.user_response) {
-      userResponses.value[flashcard.id] = flashcard.user_response;
+    const userResponse = flashcard.responses?.find(
+      (r) => r.user_id === props.user.id
+    );
+    if (userResponse) {
+      userResponses.value[flashcard.id] = {
+        selected_answer: userResponse.selected_answer,
+        is_correct: userResponse.is_correct,
+      };
       answeredFlashcards.value.add(flashcard.id);
     }
   });
