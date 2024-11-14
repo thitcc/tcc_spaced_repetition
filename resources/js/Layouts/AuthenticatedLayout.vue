@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import Dropdown from "@/Components/Dropdown.vue";
 import DropdownLink from "@/Components/DropdownLink.vue";
 import NavLink from "@/Components/NavLink.vue";
@@ -17,6 +17,10 @@ const unreadNotifications = ref([]);
 const dropdownOpen = ref(false);
 const modalOpen = ref(false);
 const modalMessage = ref("");
+
+const isStudent = computed(() => {
+  return props.auth?.user?.roles?.[0]?.name === "student";
+});
 
 const toggleDropdown = () => {
   dropdownOpen.value = !dropdownOpen.value;
@@ -52,20 +56,20 @@ const openDailyReviewModal = () => {
   modalOpen.value = true;
 };
 
-const showModalBasedOnLastLogin = () => {
-  const lastLoginAt = props.user.last_login_at
-    ? new Date(props.user.last_login_at)
-    : null;
-  const now = new Date();
+// const showModalBasedOnLastLogin = () => {
+//   const lastLoginAt = props.user.last_login_at
+//     ? new Date(props.user.last_login_at)
+//     : null;
+//   const now = new Date();
 
-  if (lastLoginAt && lastLoginAt.toDateString() !== now.toDateString()) {
-    // openDailyReviewModal();
-  }
-};
+//   if (lastLoginAt && lastLoginAt.toDateString() !== now.toDateString()) {
+//     openDailyReviewModal();
+//   }
+// };
 
 onMounted(() => {
   fetchNotifications();
-  showModalBasedOnLastLogin();
+  // showModalBasedOnLastLogin();
 });
 </script>
 
@@ -86,7 +90,7 @@ onMounted(() => {
                   Cursos
                 </NavLink>
                 <NavLink
-                  v-if="$page.props.auth.user.roles[0].name === 'student'"
+                  v-if="isStudent"
                   :href="route('activities')"
                   :active="route().current('activities')"
                 >
