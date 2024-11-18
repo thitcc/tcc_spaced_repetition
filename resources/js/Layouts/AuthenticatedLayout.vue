@@ -90,7 +90,6 @@ onMounted(() => {
                   Cursos
                 </NavLink>
                 <NavLink
-                  v-if="isStudent"
                   :href="route('activities')"
                   :active="route().current('activities')"
                 >
