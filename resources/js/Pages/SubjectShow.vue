@@ -346,11 +346,11 @@ onMounted(() => {
     <div
       v-if="activeFlashcard && props.userRole !== 'teacher'"
       @click="closeFlashcardModal"
-      class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50"
+      class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50 backdrop-blur-sm"
     >
       <div
         @click.stop
-        class="relative bg-white p-8 rounded-lg shadow-lg w-1/2 mx-auto"
+        class="relative bg-white p-8 rounded-lg shadow-lg w-1/2 mx-auto pointer-events-auto"
       >
         <h3 class="font-semibold text-xl mb-4 text-left">
           <template
@@ -382,9 +382,9 @@ onMounted(() => {
 
     <div
       v-if="showFlashcardModal"
-      class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center"
+      class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50 backdrop-blur-sm"
     >
-      <div class="bg-white p-8 rounded-lg shadow-lg w-1/3">
+      <div class="bg-white p-8 rounded-lg shadow-lg w-1/3 pointer-events-auto">
         <h3 class="font-semibold text-xl mb-4">Adicionar Flashcard</h3>
         <form @submit.prevent="createFlashcard">
           <div class="mb-4">
@@ -463,9 +463,9 @@ onMounted(() => {
 
     <div
       v-if="showReviewModal && allAnswered"
-      class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50"
+      class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50 backdrop-blur-sm"
     >
-      <div class="bg-white p-8 rounded-lg shadow-lg w-1/3">
+      <div class="bg-white p-8 rounded-lg shadow-lg w-1/3 pointer-events-auto">
         <h3 class="font-semibold text-xl mb-4">Revisão Completa</h3>
         <p>Avalie seu desempenho geral (0-5):</p>
         <input
@@ -486,9 +486,9 @@ onMounted(() => {
 
     <div
       v-if="showEditFlashcardModal"
-      class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50"
+      class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50 backdrop-blur-sm"
     >
-      <div class="bg-white p-8 rounded-lg shadow-lg w-1/3">
+      <div class="bg-white p-8 rounded-lg shadow-lg w-1/3 pointer-events-auto">
         <h3 class="font-semibold text-xl mb-4">Editar Flashcard</h3>
         <form @submit.prevent="updateFlashcard">
           <div class="mb-4">

@@ -25,25 +25,35 @@ class CourseController extends Controller
             'name' => $request->name,
             'teacher_id' => auth()->id(),
         ]);
-    
+
         return redirect('/dashboard')->with('success', 'Curso criado com sucesso.');
     }
-    
+
+    public function getAvailableStudents(Request $request, Course $course)
+    {
+        $search = $request->input('search', '');
+
+        return User::role('student')
+            ->whereNotIn('id', $course->students->pluck('id'))
+            ->where(function ($query) use ($search) {
+                $query->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            })
+            ->select('id', 'name', 'email')
+            ->get();
+    }
+
     public function addStudent(Request $request, $courseId)
     {
         $course = Course::findOrFail($courseId);
-    
-        $studentEmails = $request->input('student_emails');
-        $emailsArray = explode(',', $studentEmails);
-    
-        $students = User::whereIn('email', $emailsArray)->get();
-    
-        foreach ($students as $student) {
-            if ($student->hasRole('student')) {
-                $course->students()->attach($student);
-            }
-        }
-    
+        $studentIds = $request->input('student_ids', []);
+
+        $students = User::whereIn('id', $studentIds)
+            ->role('student')
+            ->get();
+
+        $course->students()->attach($students);
+
         return back()->with('success', 'Students added successfully.');
     }
 }
