@@ -18,10 +18,6 @@ const dropdownOpen = ref(false);
 const modalOpen = ref(false);
 const modalMessage = ref("");
 
-const isStudent = computed(() => {
-  return props.auth?.user?.roles?.[0]?.name === "student";
-});
-
 const toggleDropdown = () => {
   dropdownOpen.value = !dropdownOpen.value;
 };
@@ -45,31 +41,14 @@ const fetchNotifications = async () => {
 const markAsRead = async (notificationId) => {
   try {
     await axios.post(`/notifications/${notificationId}/markAsRead`);
-    fetchNotifications();
+    window.location.href = "/activities";
   } catch (error) {
     console.error("Ocorreu um erro ao marcar a notificação como lida.", error);
   }
 };
 
-const openDailyReviewModal = () => {
-  modalMessage.value = "Você tem 5 minutinhos para fazer a revisão do dia?";
-  modalOpen.value = true;
-};
-
-// const showModalBasedOnLastLogin = () => {
-//   const lastLoginAt = props.user.last_login_at
-//     ? new Date(props.user.last_login_at)
-//     : null;
-//   const now = new Date();
-
-//   if (lastLoginAt && lastLoginAt.toDateString() !== now.toDateString()) {
-//     openDailyReviewModal();
-//   }
-// };
-
 onMounted(() => {
   fetchNotifications();
-  // showModalBasedOnLastLogin();
 });
 </script>
 
@@ -137,7 +116,6 @@ onMounted(() => {
             </div>
 
             <div class="hidden sm:flex sm:items-center sm:ms-6">
-              <!-- Settings Dropdown -->
               <div class="ms-3 relative">
                 <Dropdown align="right" width="48">
                   <template #trigger>
