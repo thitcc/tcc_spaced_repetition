@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use Inertia\Inertia;
 use Illuminate\Http\Request;
-use App\Models\Subject;
 use Carbon\Carbon;
 
 class ActivitiesController extends Controller
@@ -12,31 +11,41 @@ class ActivitiesController extends Controller
     public function index(Request $request)
     {
         $user = auth()->user();
-        $courses = collect();
+        $courses = $user->studentCourses()->with('teacher')->get();
         $subjects = collect();
 
-        $courses = $user->studentCourses()->with('teacher')->get();
-
         foreach ($courses as $course) {
-            $subject = $course->subjects()->with('course')->with('flashcards')->get();
+            $subject = $course->subjects()
+                ->with('course')
+                ->with('flashcards')
+                ->with([
+                    'userCompletions' => function ($query) use ($user) {
+                        $query->where('user_id', $user->id);
+                    }
+                ])
+                ->get();
             $subjects = $subjects->merge($subject);
         }
 
-        $subjects = $subjects->map(function ($subject) {
-            $now = Carbon::now();
+        $subjects = $subjects->map(function ($subject) use ($user) {
+            $completion = $subject->userCompletions->first();
 
-            if ($subject->completed) {
+            if ($completion && $completion->completed) {
                 $subject->priority = 0;
-            } elseif ($subject->next_review_at) {
-                $diffInHours = $now->diffInHours($subject->next_review_at, false);
-        
+                $subject->completed = true;
+                $subject->next_review_at = $completion->next_review_at;
+            } elseif ($completion && $completion->next_review_at) {
+                $diffInHours = Carbon::now()->diffInHours($completion->next_review_at, false);
                 if ($diffInHours <= 0) {
                     $subject->priority = 10;
                 } else {
                     $subject->priority = max(1, 10 - floor($diffInHours / 24));
                 }
+                $subject->completed = false;
+                $subject->next_review_at = $completion->next_review_at;
             } else {
                 $subject->priority = 5;
+                $subject->completed = false;
             }
 
             return $subject;

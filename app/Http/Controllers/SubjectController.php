@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Subject;
+use App\Models\SubjectUserCompletion;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Carbon\Carbon;
@@ -11,20 +12,28 @@ class SubjectController extends Controller
 {
     public function show(Subject $subject)
     {
-        $subject->load(['flashcards.responses' => function($query) {
-            $query->where('user_id', auth()->id());
-        }]);
-    
+        $user = auth()->user();
+
+        $subject->load([
+            'flashcards.responses' => function ($query) use ($user) {
+                $query->where('user_id', $user->id);
+            },
+            'userCompletions' => function ($query) use ($user) {
+                $query->where('user_id', $user->id);
+            }
+        ]);
+
         $subject->flashcards->each(function ($flashcard) {
             $flashcard->answered = count($flashcard->responses) > 0;
         });
-    
-        $isDueForReview = $subject->next_review_at && Carbon::now()->gte($subject->next_review_at);
-    
+
+        $completion = $subject->userCompletions->first();
+        $isDueForReview = $completion && $completion->next_review_at && Carbon::now()->gte($completion->next_review_at);
+
         return Inertia::render('SubjectShow', [
-            'user' => auth()->user(),
+            'user' => $user,
             'subject' => $subject,
-            'userRole' => auth()->user()->getRoleNames()->first(),
+            'userRole' => $user->getRoleNames()->first(),
             'isDueForReview' => $isDueForReview,
         ]);
     }
@@ -47,19 +56,17 @@ class SubjectController extends Controller
         $request->validate([
             'quality' => 'required|integer|min:0|max:5',
         ]);
-    
+
+        $user = auth()->user();
         $quality = $request->input('quality');
-    
-        $subject->updatePriority($quality);
-    
-        if ($quality >= 4) {
-            $subject->completed = true;
-        } else {
-            $subject->completed = false;
-        }
-    
-        $subject->save();
-    
+
+        $completion = SubjectUserCompletion::updateOrCreate(
+            ['user_id' => $user->id, 'subject_id' => $subject->id],
+            ['completed' => $quality >= 4]
+        );
+
+        $completion->updatePriority($quality);
+
         return response()->json(['success' => true]);
     }
 }

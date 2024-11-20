@@ -35,7 +35,12 @@ class Subject extends Model
         $this->completed = true;
         $this->save();
     }
-    
+
+    public function userCompletions()
+    {
+        return $this->hasMany(SubjectUserCompletion::class);
+    }
+
     public function updatePriority($quality)
     {
         $quality = max(0, min(5, $quality));

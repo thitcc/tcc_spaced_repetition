@@ -178,13 +178,13 @@ function submitReview() {
       quality: quality.value,
     })
     .then(() => {
-      props.subject.completed = true;
       showReviewModal.value = false;
       reviewSubmitted.value = true;
       localStorage.setItem(
         `subject_${props.subject.id}_review_submitted`,
         "true"
       );
+      window.location.reload();
     })
     .catch((error) => {
       console.error("Error submitting review:", error);
