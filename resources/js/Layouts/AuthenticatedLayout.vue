@@ -122,7 +122,8 @@ onMounted(() => {
                     v-for="notification in notifications"
                     :key="notification.id"
                     class="notification-item"
-                    @click="markAsRead(notification.id)"
+                    @click.prevent="markAsRead(notification.id)"
+                    :class="{ 'read-notification': notification.read_at }"
                   >
                     <div>{{ notification.content }}</div>
                     <div class="text-sm text-gray-500">
@@ -351,5 +352,9 @@ onMounted(() => {
   border: none;
   border-radius: 4px;
   cursor: pointer;
+}
+
+.read-notification {
+  color: gray;
 }
 </style>
